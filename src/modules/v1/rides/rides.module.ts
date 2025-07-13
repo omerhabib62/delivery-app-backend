@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { RidesService } from './rides.service';
 import { RidesGateway } from './rides.gateway';
 import { Ride, RideSchema } from './ride.schema';
+import { KafkaModule } from '../../../modules/kafka/kafka.module';
 
 @Module({
   imports: [

@@ -5,7 +5,8 @@ import { Ride } from '../v1/rides/ride.schema';
 import { Order } from '../v1/orders/order.schema';
 import { RidesGateway } from '../v1/rides/rides.gateway';
 import { OrdersGateway } from '../v1/orders/orders.gateway';
-import { ClientKafka } from '@nestjs/microservices';
+import { Inject } from '@nestjs/common';
+import { ClientKafka, MessagePattern, Payload } from '@nestjs/microservices';
 
 @Injectable()
 export class KafkaConsumerService implements OnModuleInit {
@@ -14,46 +15,39 @@ export class KafkaConsumerService implements OnModuleInit {
     @InjectModel(Order.name) private orderModel: Model<Order>,
     private ridesGateway: RidesGateway,
     private ordersGateway: OrdersGateway,
-    private clientKafka: ClientKafka,
+    @Inject('KAFKA_SERVICE') private readonly kafkaClient: ClientKafka,
   ) {}
 
   async onModuleInit() {
-    // Subscribe to topics
-    this.clientKafka.subscribeToResponseOf('ride.created');
-    this.clientKafka.subscribeToResponseOf('ride.updated');
-    this.clientKafka.subscribeToResponseOf('order.created');
-    this.clientKafka.subscribeToResponseOf('order.updated');
+    // No need to subscribe here; @MessagePattern handles subscriptions
+    await this.kafkaClient.connect();
+  }
 
-    // Wait for connection to be ready
-    await this.clientKafka.connect();
+  @MessagePattern('ride.created')
+  handleRideCreated(@Payload() message: any) {
+    const data = JSON.parse(message.value.toString());
+    this.ridesGateway.notifyRideUpdate(data._id, data);
+  }
 
-    // Set up message handlers
-    this.clientKafka.subscribeToPatterns([
-      'ride.created',
-      'ride.updated',
-      'order.created',
-      'order.updated',
-    ]);
+  @MessagePattern('ride.updated')
+  handleRideUpdated(@Payload() message: any) {
+    const data = JSON.parse(message.value.toString());
+    this.ridesGateway.notifyRideUpdate(data._id, data);
+  }
 
-    // Handle messages based on pattern
-    this.clientKafka.messageHandlers.set('ride.created', async (message) => {
-      const data = JSON.parse(message.value.toString());
-      this.ridesGateway.notifyRideUpdate(data._id, data);
-    });
+  @MessagePattern('order.created')
+  handleOrderCreated(@Payload() message: any) {
+    const data = JSON.parse(message.value.toString());
+    this.ordersGateway.notifyOrderUpdate(data._id, data);
+  }
 
-    this.clientKafka.messageHandlers.set('ride.updated', async (message) => {
-      const data = JSON.parse(message.value.toString());
-      this.ridesGateway.notifyRideUpdate(data._id, data);
-    });
+  @MessagePattern('order.updated')
+  handleOrderUpdated(@Payload() message: any) {
+    const data = JSON.parse(message.value.toString());
+    this.ordersGateway.notifyOrderUpdate(data._id, data);
+  }
 
-    this.clientKafka.messageHandlers.set('order.created', async (message) => {
-      const data = JSON.parse(message.value.toString());
-      this.ordersGateway.notifyOrderUpdate(data._id, data);
-    });
-
-    this.clientKafka.messageHandlers.set('order.updated', async (message) => {
-      const data = JSON.parse(message.value.toString());
-      this.ordersGateway.notifyOrderUpdate(data._id, data);
-    });
+  async onModuleDestroy() {
+    await this.kafkaClient.close();
   }
 }

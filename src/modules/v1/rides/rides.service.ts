@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Ride } from './ride.schema';
-import { CreateRideDto } from '../../common/dto/create-ride.dto';
-import { KafkaProducerService } from '../kafka/kafka.producer.service';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { googleMapsConfig } from '../../../config/google-maps.config';
+import { KafkaProducerService } from '../../../modules/kafka/kafka.producer';
+import { CreateRideDto } from '../../../common/dto/create-ride.dto';
 
 @Injectable()
 export class RidesService {

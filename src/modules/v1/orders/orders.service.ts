@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Order } from './order.schema';
 import { CreateOrderDto } from '../../../common/dto/create-order.dto';
-import { KafkaProducerService } from '../kafka/kafka.producer.service';
+import { KafkaProducerService } from 'src/modules/kafka/kafka.producer';
 
 @Injectable()
 export class OrdersService {

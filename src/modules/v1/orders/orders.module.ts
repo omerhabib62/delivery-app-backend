@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { OrdersService } from './orders.service';
-import { OrdersController } from './orders.controller';
-import { OrdersGateway } from './orders.gateway';
 import { Order, OrderSchema } from './order.schema';
-import { KafkaModule } from '../kafka/kafka.module';
+import { KafkaModule } from '../../../modules/kafka/kafka.module';
+import { OrdersGateway } from './orders.gateway';
+import { OrdersController } from './orders.controller';
+import { OrdersService } from './orders.service';
 
 @Module({
   imports: [
